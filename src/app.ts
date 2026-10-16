@@ -5,6 +5,7 @@ import { academicAttendanceRouter } from './routes/academic-attendance.js'
 import { authRouter } from './routes/auth.js'
 import { companiesRouter } from './routes/companies.js'
 import { locationsRouter } from './routes/locations.js'
+import { rootRouter } from './routes/root.js'
 import { settingsRouter } from './routes/settings.js'
 
 export const app = express()
@@ -37,6 +38,7 @@ app.get('/api/health/db', async (_request, response) => {
 })
 
 app.use('/api/auth', authRouter)
+app.use('/api/root', rootRouter)
 app.use('/api/companies', companiesRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/locations', locationsRouter)

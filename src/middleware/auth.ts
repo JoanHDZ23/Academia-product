@@ -23,10 +23,24 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
 
   try {
     request.authUser = verifyToken(token)
+    // Root no pertenece a una institución; no se valida empresa activa.
+    if (request.authUser.role === 'root') {
+      next()
+      return
+    }
     void checkCompanyActive(request, response, next)
   } catch {
     response.status(401).json({ message: 'Token inválido o vencido.' })
   }
+}
+
+/** Middleware que exige rol root. */
+export function requireRoot(request: Request, response: Response, next: NextFunction) {
+  if (!request.authUser || request.authUser.role !== 'root') {
+    response.status(403).json({ message: 'Acceso denegado. Se requiere rol root.' })
+    return
+  }
+  next()
 }
 
 async function checkCompanyActive(request: Request, response: Response, next: NextFunction) {

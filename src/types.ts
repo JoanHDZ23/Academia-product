@@ -5,7 +5,7 @@
 
 // ── Roles y autenticación ────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'docente' | 'estudiante' | 'supervisor'
+export type UserRole = 'root' | 'admin' | 'docente' | 'estudiante' | 'supervisor'
 
 export type AuthUser = {
   userId: string
