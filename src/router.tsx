@@ -7,6 +7,7 @@ import DashboardHomePage from './pages/DashboardHomePage'
 import LoginPage from './pages/LoginPage'
 import MemberInvitationPage from './pages/MemberInvitationPage'
 import RegisterInstitutionPage from './pages/RegisterInstitutionPage'
+import RootPanelPage from './pages/RootPanelPage'
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,10 @@ export const router = createBrowserRouter([
       { path: '/registro-institucion', element: <RegisterInstitutionPage /> },
       { path: '/registro-integrante/:token', element: <MemberInvitationPage /> },
     ],
+  },
+  {
+    path: '/root-panel',
+    element: <RootPanelPage />,
   },
   {
     path: '/dashboard',

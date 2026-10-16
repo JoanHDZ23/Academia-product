@@ -3699,3 +3699,77 @@ button, input, textarea, select { font: inherit; }
   .facescan { gap: .7rem; }
   .facescan__ring { width: min(52vw, 190px); }
 }
+
+/* ─── Root Panel · Academia (vista simplificada) ─────────────────────── */
+.root-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background: var(--klock-bg, var(--clr-bg));
+}
+.root-login__card {
+  width: 100%;
+  max-width: 380px;
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  border-radius: 20px;
+  background: var(--klock-surface, var(--clr-surface));
+  border: 1px solid var(--klock-border, var(--clr-border));
+  box-shadow: var(--klock-shadow-lg, var(--shadow-lg));
+}
+.root-login__card h1 { margin: 0; font-size: 1.4rem; color: var(--klock-text, var(--clr-text)); }
+.root-login__card > p { margin: 0; font-size: 13.5px; color: var(--klock-text-3, var(--clr-text-3)); }
+.root-login__card label { display: grid; gap: .4rem; font-size: 13px; font-weight: 600; color: var(--klock-text, var(--clr-text)); }
+.root-login__card input {
+  padding: .7rem .9rem;
+  border: 1px solid var(--klock-border, var(--clr-border));
+  border-radius: 10px;
+  background: var(--klock-bg, var(--clr-bg));
+  color: var(--klock-text, var(--clr-text));
+  font: inherit;
+}
+.root-login__card input:focus {
+  outline: none;
+  border-color: var(--klock-primary, #7c3aed);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--klock-primary, #7c3aed) 15%, transparent);
+}
+
+.root-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.root-panel__header h1 { margin: 0; font-size: 1.4rem; }
+.root-panel__header p { margin: .2rem 0 0; font-size: 13px; color: var(--klock-text-3, var(--clr-text-3)); }
+
+.root-companies {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.root-company {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 16px;
+  background: var(--klock-surface, var(--clr-surface));
+  border: 1px solid var(--klock-border, var(--clr-border));
+}
+.root-company--off { opacity: .65; }
+.root-company__main { display: grid; gap: .3rem; }
+.root-company__main h3 { margin: 0; font-size: 1.05rem; }
+.root-company__main small { font-size: 12.5px; color: var(--klock-text-3, var(--clr-text-3)); }
+.root-company__actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+/* La fila .root-feature se usa como <label> clicable completo */
+.root-feature { cursor: pointer; }
+.root-feature__text { display: flex; flex-direction: column; min-width: 0; }
+
+@media (max-width: 640px) {
+  .root-companies { grid-template-columns: 1fr; }
+}
