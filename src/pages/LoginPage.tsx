@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, CustomForm, type CustomFormField, type CustomFormValues } from '../components'
-import { apiRequest, type EmbedLoginResponse, type LoginResponse } from '../lib/api'
+import { apiRequest, type LoginResponse } from '../lib/api'
 import {
   getCurrentToken,
   getCurrentUser,
@@ -9,7 +9,7 @@ import {
   setCurrentToken,
   setCurrentUser,
 } from '../lib/auth-storage'
-import { getEmbedCompanyId, getEmbedCompanyName, getEmbedRole, getEmbedUser, isEmbedded } from '../lib/embed-context'
+import { isEmbedded } from '../lib/embed-context'
 
 const loginFields: CustomFormField[] = [
   {
@@ -28,51 +28,19 @@ export default function LoginPage() {
 
   const embedded = isEmbedded()
 
-  // Si ya hay sesión válida (incluso offline), entra directo sin tocar la red.
+  // Si está embebido o ya hay sesión válida, entra directo al home (el
+  // auto-ingreso embebido lo resuelve RequireAuth en /dashboard).
   useEffect(() => {
+    if (embedded) {
+      navigate('/dashboard', { replace: true })
+      return
+    }
     const user = getCurrentUser()
     const token = getCurrentToken()
     if (user && token && isOfflineSessionValid()) {
       navigate('/dashboard', { replace: true })
     }
-  }, [navigate])
-
-  // Modo embebido (dentro de turnos): auto-ingreso con el contexto recibido,
-  // SIN mostrar formulario de login.
-  useEffect(() => {
-    if (!embedded) return
-    let cancelled = false
-    const run = async () => {
-      try {
-        const res = await apiRequest<EmbedLoginResponse>('/auth/embed', {
-          method: 'POST',
-          body: {
-            companyId: getEmbedCompanyId(),
-            companyName: getEmbedCompanyName(),
-            user: getEmbedUser(),
-            role: getEmbedRole(),
-          },
-        })
-        if (cancelled) return
-        setCurrentToken(res.token)
-        setCurrentUser({
-          id: res.user.id,
-          companyId: res.user.companyId,
-          nombreCompleto: res.user.nombreCompleto,
-          correo: res.user.correo,
-          cargo: res.user.cargo,
-          role: res.user.role,
-          allowedModules: res.user.allowedModules as never,
-          permissionLevels: res.user.permissionLevels,
-        })
-        navigate('/dashboard', { replace: true })
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'No fue posible abrir Academia.')
-      }
-    }
-    void run()
-    return () => { cancelled = true }
-  }, [embedded, navigate])
+  }, [navigate, embedded])
 
   const handleLogin = async (values: CustomFormValues) => {
     setBusy(true)
