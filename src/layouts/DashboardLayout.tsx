@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Icon, KlockLogo } from '../components'
 import { clearCurrentUser, getCurrentToken, getCurrentUser } from '../lib/auth-storage'
 import { apiRequest, type CompanyResponse } from '../lib/api'
+import { getEmbedCompanyName, isEmbedded } from '../lib/embed-context'
 
 function readInitialTheme(): 'light' | 'dark' {
   try {
@@ -38,7 +39,8 @@ export function DashboardLayout() {
   const isEstudiante = user?.role === 'estudiante'
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [companyName, setCompanyName] = useState('')
+  const [companyName, setCompanyName] = useState(getEmbedCompanyName())
+  const embedded = isEmbedded()
   const [theme, setTheme] = useState<'light' | 'dark'>(() => readInitialTheme())
 
   const toggleTheme = () => {
@@ -165,10 +167,12 @@ export function DashboardLayout() {
             </div>
           </div>
 
-          <button className="sidebar-logout" type="button" onClick={handleLogout}>
-            <Icon name="icon-logout" size={16} />
-            <span>Cerrar sesión</span>
-          </button>
+          {!embedded && (
+            <button className="sidebar-logout" type="button" onClick={handleLogout}>
+              <Icon name="icon-logout" size={16} />
+              <span>Cerrar sesión</span>
+            </button>
+          )}
         </div>
       </aside>
 

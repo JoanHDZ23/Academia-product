@@ -30,6 +30,11 @@ export type LoginResponse = {
   }
 }
 
+export type EmbedLoginResponse = LoginResponse & {
+  company: { id: string; nombre: string; externalId: string }
+  embedRole: string
+}
+
 export type CompanyResponse = {
   id: string
   nombre: string

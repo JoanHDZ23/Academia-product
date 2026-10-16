@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, CustomForm, type CustomFormField, type CustomFormValues } from '../components'
-import { apiRequest, type LoginResponse } from '../lib/api'
+import { apiRequest, type EmbedLoginResponse, type LoginResponse } from '../lib/api'
 import {
   getCurrentToken,
   getCurrentUser,
@@ -9,6 +9,7 @@ import {
   setCurrentToken,
   setCurrentUser,
 } from '../lib/auth-storage'
+import { getEmbedCompanyId, getEmbedCompanyName, getEmbedRole, getEmbedUser, isEmbedded } from '../lib/embed-context'
 
 const loginFields: CustomFormField[] = [
   {
@@ -25,6 +26,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  const embedded = isEmbedded()
+
   // Si ya hay sesión válida (incluso offline), entra directo sin tocar la red.
   useEffect(() => {
     const user = getCurrentUser()
@@ -33,6 +36,43 @@ export default function LoginPage() {
       navigate('/dashboard', { replace: true })
     }
   }, [navigate])
+
+  // Modo embebido (dentro de turnos): auto-ingreso con el contexto recibido,
+  // SIN mostrar formulario de login.
+  useEffect(() => {
+    if (!embedded) return
+    let cancelled = false
+    const run = async () => {
+      try {
+        const res = await apiRequest<EmbedLoginResponse>('/auth/embed', {
+          method: 'POST',
+          body: {
+            companyId: getEmbedCompanyId(),
+            companyName: getEmbedCompanyName(),
+            user: getEmbedUser(),
+            role: getEmbedRole(),
+          },
+        })
+        if (cancelled) return
+        setCurrentToken(res.token)
+        setCurrentUser({
+          id: res.user.id,
+          companyId: res.user.companyId,
+          nombreCompleto: res.user.nombreCompleto,
+          correo: res.user.correo,
+          cargo: res.user.cargo,
+          role: res.user.role,
+          allowedModules: res.user.allowedModules as never,
+          permissionLevels: res.user.permissionLevels,
+        })
+        navigate('/dashboard', { replace: true })
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'No fue posible abrir Academia.')
+      }
+    }
+    void run()
+    return () => { cancelled = true }
+  }, [embedded, navigate])
 
   const handleLogin = async (values: CustomFormValues) => {
     setBusy(true)
@@ -65,6 +105,19 @@ export default function LoginPage() {
     } finally {
       setBusy(false)
     }
+  }
+
+  // En modo embebido no se muestra el formulario: se abre la sesión sola.
+  if (embedded) {
+    return (
+      <div className="auth-page" style={{ textAlign: 'center', padding: '2rem' }}>
+        {error ? (
+          <p className="turn-table__error">{error}</p>
+        ) : (
+          <p style={{ color: 'var(--klock-text-3, #64748b)' }}>Abriendo Academia…</p>
+        )}
+      </div>
+    )
   }
 
   return (
