@@ -1072,8 +1072,8 @@ academicRouter.post('/people', adminOnly, async (req, res) => {
   const currentUser = db.users.find((u) => u.id === req.authUser!.userId)
   const companyId = resolveCompanyIdForUser(db, currentUser)
 
-  const dup = db.users.find((u) => u.correo === correo || u.numeroDocumento === numeroDocumento)
-  if (dup) return res.status(409).json({ message: 'Ya existe una persona con ese correo o documento.' })
+  const dup = db.users.find((u) => u.companyId === companyId && (u.correo === correo || u.numeroDocumento === numeroDocumento))
+  if (dup) return res.status(409).json({ message: 'Ya existe una persona con ese correo o documento en esta institución.' })
 
   const cargo = role === 'docente' ? 'Docente' : 'Estudiante'
   const extra: Record<string, unknown> = {}

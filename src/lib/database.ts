@@ -226,7 +226,7 @@ export async function createSubject(subject: Omit<Subject, 'id'>) {
 }
 export async function updateSubject(subject: Subject) {
   const col = await getSubjectsCollection()
-  await col.updateOne({ id: subject.id }, { $set: subject as any })
+  await col.updateOne({ id: subject.id, companyId: subject.companyId }, { $set: subject as any })
   return subject
 }
 export async function deleteSubject(id: string, companyId: string) {
@@ -262,7 +262,7 @@ export async function createAcademicGroup(group: Omit<AcademicGroup, 'id'>) {
 }
 export async function updateAcademicGroup(group: AcademicGroup) {
   const col = await getAcademicGroupsCollection()
-  await col.updateOne({ id: group.id }, { $set: group as any })
+  await col.updateOne({ id: group.id, companyId: group.companyId }, { $set: group as any })
   return group
 }
 export async function deleteAcademicGroup(id: string, companyId: string) {
@@ -280,7 +280,7 @@ export async function createClassSession(session: Omit<ClassSession, 'id'>) {
 }
 export async function updateClassSession(session: ClassSession) {
   const col = await getClassSessionsCollection()
-  await col.updateOne({ id: session.id }, { $set: session as any })
+  await col.updateOne({ id: session.id, companyId: session.companyId }, { $set: session as any })
   return session
 }
 export async function deleteClassSession(id: string, companyId: string) {
@@ -306,7 +306,7 @@ export async function upsertStudentAttendance(
   data: Partial<StudentAttendance> & Pick<StudentAttendance, 'companyId' | 'academicGroupId' | 'subjectId' | 'fecha' | 'estudianteUserId' | 'estudianteNombre' | 'estado'>,
 ) {
   const col = await getStudentAttendancesCollection()
-  const existing = await col.findOne({ sessionId: filter.sessionId, estudianteUserId: filter.estudianteUserId })
+  const existing = await col.findOne({ companyId: data.companyId, sessionId: filter.sessionId, estudianteUserId: filter.estudianteUserId })
   if (existing) {
     const merged: StudentAttendance = { ...(existing as any), ...data, updatedAt: new Date().toISOString() }
     await col.updateOne({ id: merged.id }, { $set: merged as any })
@@ -333,7 +333,7 @@ export async function upsertInstructorAttendance(
   data: Partial<InstructorAttendance> & Pick<InstructorAttendance, 'companyId' | 'academicGroupId' | 'subjectId' | 'fecha' | 'docenteUserId' | 'docenteNombre' | 'estado'>,
 ) {
   const col = await getInstructorAttendancesCollection()
-  const existing = await col.findOne({ sessionId: filter.sessionId })
+  const existing = await col.findOne({ companyId: data.companyId, sessionId: filter.sessionId })
   if (existing) {
     const merged: InstructorAttendance = { ...(existing as any), ...data, updatedAt: new Date().toISOString() }
     await col.updateOne({ id: merged.id }, { $set: merged as any })

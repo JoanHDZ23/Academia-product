@@ -54,10 +54,19 @@ export async function connectMongo(): Promise<Db> {
 
 async function createIndexes(database: Db) {
   try {
+    // Migración: elimina índices únicos GLOBALES antiguos de users que impedían
+    // tener la misma persona en instituciones distintas (ahora son por companyId).
+    for (const stale of ['numeroDocumento_1', 'correo_1']) {
+      try { await database.collection('users').dropIndex(stale) } catch { /* no existía */ }
+    }
+
     await database.collection('companies').createIndex({ nit: 1 }, { unique: true, sparse: true })
+    // externalId (companyId del producto de turnos) debe ser único: una institución por compañía externa.
+    await database.collection('companies').createIndex({ externalId: 1 }, { unique: true, sparse: true })
     await database.collection('users').createIndex({ companyId: 1 })
-    await database.collection('users').createIndex({ numeroDocumento: 1 }, { unique: true, sparse: true })
-    await database.collection('users').createIndex({ correo: 1 }, { sparse: true })
+    // Documento/correo únicos POR institución (no globales), para aislar entre compañías.
+    await database.collection('users').createIndex({ companyId: 1, numeroDocumento: 1 }, { unique: true, sparse: true })
+    await database.collection('users').createIndex({ companyId: 1, correo: 1 }, { sparse: true })
     await database.collection('locations').createIndex({ companyId: 1 })
     await database.collection('userInvitations').createIndex({ token: 1 }, { unique: true })
     await database.collection('subjects').createIndex({ companyId: 1 })
@@ -73,6 +82,7 @@ async function createIndexes(database: Db) {
     await database.collection('studentAttendances').createIndex({ companyId: 1, fecha: 1 })
     await database.collection('studentAttendances').createIndex({ companyId: 1, sessionId: 1 })
     await database.collection('studentAttendances').createIndex({ companyId: 1, estudianteUserId: 1, fecha: 1 })
+    await database.collection('studentAttendances').createIndex({ companyId: 1, sessionId: 1, estudianteUserId: 1 }, { unique: true, sparse: true })
     await database.collection('instructorAttendances').createIndex({ companyId: 1, fecha: 1 })
     await database.collection('instructorAttendances').createIndex({ companyId: 1, docenteUserId: 1, fecha: 1 })
     await database.collection('instructorAttendances').createIndex({ companyId: 1, sessionId: 1 }, { unique: true, sparse: true })

@@ -35,21 +35,31 @@ authRouter.post('/embed', async (request, response) => {
     const externalId = String(companyId)
     const db = await readDatabase()
 
-    // 1. Institución (keyed por externalId del producto de turnos)
+    // 1. Institución (keyed por externalId del producto de turnos).
+    //    El índice único sobre externalId garantiza una sola institución por
+    //    compañía externa; si dos requests concurrentes intentan crearla, la
+    //    segunda recibe un error de duplicado y re-lee la existente.
     let company = db.companies.find((c) => c.externalId === externalId)
     const nombre = (companyName && String(companyName).trim()) || company?.nombre || 'Institución'
     if (!company) {
-      company = await createCompany({
-        externalId,
-        nombre,
-        nit: `EXT-${externalId}`,
-        correo: `academia+${externalId}@klock.local`,
-        tipo: 'academia',
-        enabledModules: getDefaultModulesByType(),
-        settings: getDefaultSettings(),
-        activa: true,
-        createdAt: new Date().toISOString(),
-      })
+      try {
+        company = await createCompany({
+          externalId,
+          nombre,
+          nit: `EXT-${externalId}`,
+          correo: `academia+${externalId}@klock.local`,
+          tipo: 'academia',
+          enabledModules: getDefaultModulesByType(),
+          settings: getDefaultSettings(),
+          activa: true,
+          createdAt: new Date().toISOString(),
+        })
+      } catch (e) {
+        // Carrera: otra request creó la institución con el mismo externalId.
+        const retry = await readDatabase()
+        company = retry.companies.find((c) => c.externalId === externalId)
+        if (!company) throw e
+      }
     } else if (companyName && company.nombre !== nombre) {
       company.nombre = nombre
       await updateCompany(company)
