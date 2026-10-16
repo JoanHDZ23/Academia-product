@@ -7,10 +7,98 @@ import {
   findUserInvitationByToken,
   readDatabase,
   updateAcademicGroup,
+  updateCompany,
+  updateUser,
   updateUserInvitation,
 } from '../lib/database.js'
 
 export const authRouter = Router()
+
+/**
+ * POST /api/auth/embed
+ * Ingreso embebido desde el producto de turnos: NO pide login.
+ * Recibe el contexto de la sesión de turnos (companyId externo, nombre de la
+ * institución, usuario, rol) y:
+ *  - crea/reutiliza la institución en la DB de academia (keyed por externalId),
+ *  - crea/reutiliza un usuario administrador puente para esa institución,
+ *  - devuelve un token + usuario como el login normal.
+ * Así, al entrar, Academia carga con el nombre de la compañía y sus opciones.
+ */
+authRouter.post('/embed', async (request, response) => {
+  try {
+    const { companyId, companyName, user, role } = request.body ?? {}
+    if (!companyId) {
+      response.status(400).json({ message: 'companyId es requerido para el acceso embebido.' })
+      return
+    }
+
+    const externalId = String(companyId)
+    const db = await readDatabase()
+
+    // 1. Institución (keyed por externalId del producto de turnos)
+    let company = db.companies.find((c) => c.externalId === externalId)
+    const nombre = (companyName && String(companyName).trim()) || company?.nombre || 'Institución'
+    if (!company) {
+      company = await createCompany({
+        externalId,
+        nombre,
+        nit: `EXT-${externalId}`,
+        correo: `academia+${externalId}@klock.local`,
+        tipo: 'academia',
+        enabledModules: getDefaultModulesByType(),
+        settings: getDefaultSettings(),
+        activa: true,
+        createdAt: new Date().toISOString(),
+      })
+    } else if (companyName && company.nombre !== nombre) {
+      company.nombre = nombre
+      await updateCompany(company)
+    }
+
+    // 2. Usuario administrador puente (uno por institución)
+    const bridgeDocumento = `embed-admin-${company.id}`
+    let adminUser = db.users.find((u) => u.companyId === company!.id && u.numeroDocumento === bridgeDocumento)
+    if (!adminUser) {
+      adminUser = await createUser({
+        companyId: company.id,
+        nombreCompleto: user ? String(user) : 'Administrador',
+        tipoDocumento: 'NIT',
+        numeroDocumento: bridgeDocumento,
+        correo: `admin+${company.id}@klock.local`,
+        cargo: 'Administrador',
+        role: 'admin',
+        activa: true,
+        createdAt: new Date().toISOString(),
+      })
+    } else if (user && adminUser.nombreCompleto !== String(user)) {
+      adminUser.nombreCompleto = String(user)
+      await updateUser(adminUser)
+    }
+
+    const freshDb = await readDatabase()
+    const token = signToken({ userId: adminUser.id, companyId: company.id, role: 'admin' })
+    response.json({
+      token,
+      user: {
+        id: adminUser.id,
+        companyId: company.id,
+        nombreCompleto: adminUser.nombreCompleto,
+        correo: adminUser.correo,
+        cargo: adminUser.cargo,
+        role: 'admin',
+        allowedModules: resolveAllowedModules(freshDb, adminUser),
+        permissionLevels: resolvePermissionLevels(freshDb, adminUser),
+      },
+      company: { id: company.id, nombre: company.nombre, externalId },
+      // Ignora el rol de turnos para el acceso embebido inicial; siempre admin.
+      embedRole: role ? String(role) : 'admin',
+    })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    console.error('[embed] Error:', message)
+    response.status(500).json({ message: 'Error en el acceso embebido.', detail: message })
+  }
+})
 
 /**
  * POST /api/auth/register-institution

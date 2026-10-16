@@ -75,6 +75,8 @@ export type CompanySettings = {
 
 export type Company = {
   id: string
+  /** ID de la compañía en el producto de turnos (cuando se accede embebido). */
+  externalId?: string
   nombre: string
   nit: string
   correo: string
