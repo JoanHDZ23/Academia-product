@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 88" role="img" aria-label="Klock">
+  <defs>
+    <!-- Wordmark: DEPENDE DEL TEMA (--klock-text) -->
+    <linearGradient id="KlockWordmark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="var(--klock-text, #0F172A)"/>
+      <stop offset="100%" stop-color="color-mix(in srgb, var(--klock-text, #0F172A) 82%, black)"/>
+    </linearGradient>
+
+    <!-- O mini-dial (aro): gradiente violeta Klock -->
+    <linearGradient id="KlockMiniO" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="var(--klock-primary-500, #8B5CF6)"/>
+      <stop offset="55%"  stop-color="var(--klock-primary, #7C3AED)"/>
+      <stop offset="100%" stop-color="var(--klock-primary-600, #6D28D9)"/>
+    </linearGradient>
+  </defs>
+
+  <g font-family="'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif">
+    <!-- K -->
+    <text x="0" y="60" font-size="70" font-weight="800" letter-spacing="-2" fill="url(#KlockWordmark)">K</text>
+    <!-- l -->
+    <text x="61" y="60" font-size="70" font-weight="800" letter-spacing="-2" fill="url(#KlockWordmark)">l</text>
+
+    <!-- "O" = mini dial Klock violeta -->
+    <circle cx="109.5" cy="44.5" r="21.5"
+            fill="none"
+            stroke="url(#KlockMiniO)"
+            stroke-width="3.4"
+            stroke-linecap="round"/>
+    <!-- Esfera O interior -->
+    <circle cx="109.5" cy="44.5" r="17.8" fill="var(--klock-primary-bg, rgba(124, 58, 237, 0.08))"/>
+    
+    <!-- c y k -->
+    <text x="153" y="60" font-size="70" font-weight="800" letter-spacing="-2" fill="url(#KlockWordmark)">ck</text>
+
+    <!-- TAGLINE: --klock-primary violeta -->
+    <text x="1" y="83"
+          font-size="11.5"
+          font-weight="600"
+          letter-spacing="6.5"
+          fill="var(--klock-primary, #7C3AED)">
+      TIEMPO · PRECISIÓN
+    </text>
+  </g>
+</svg>

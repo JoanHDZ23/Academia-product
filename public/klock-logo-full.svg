@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 140" role="img" aria-label="Klock">
+  <defs>
+    <!-- Glow ambiental detrás del isotipo -->
+    <radialGradient id="KlockFullGlow" cx="30%" cy="50%" r="55%">
+      <stop offset="0%"   stop-color="var(--klock-primary, #7C3AED)" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="var(--klock-primary, #7C3AED)" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Gradientes del nuevo Isotipo Radar -->
+    <linearGradient id="KlockRadarBG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="KlockRadarArrow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#9333ea"/>
+    </linearGradient>
+
+    <!-- WORDMARK (DEPENDE DE --klock-text) -->
+    <linearGradient id="KlockWordmark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="var(--klock-text, #0F172A)"/>
+      <stop offset="100%" stop-color="color-mix(in srgb, var(--klock-text, #0F172A) 82%, black)"/>
+    </linearGradient>
+    <!-- O mini aro (wordmark) -->
+    <linearGradient id="KlockMiniO" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="var(--klock-primary-500, #8B5CF6)"/>
+      <stop offset="55%"  stop-color="var(--klock-primary,     #7C3AED)"/>
+      <stop offset="100%" stop-color="var(--klock-primary-600, #6D28D9)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Glow ambiental detrás del isotipo -->
+  <ellipse cx="70" cy="68" rx="76" ry="50" fill="url(#KlockFullGlow)" opacity="0.95"/>
+
+  <!-- ══════════════════════ ISOTIPO (Nuevo Radar violeta) ══════════════════════ -->
+  <g transform="translate(12, 14) scale(0.21)">
+    <!-- Fondo circular blanco -->
+    <circle cx="256" cy="256" r="240" fill="white" />
+    <!-- Anillos concéntricos -->
+    <circle cx="256" cy="256" r="210" fill="none" stroke="url(#KlockRadarBG)" stroke-width="22" />
+    <circle cx="256" cy="256" r="145" fill="none" stroke="url(#KlockRadarBG)" stroke-width="18" />
+    <circle cx="256" cy="256" r="78"  fill="none" stroke="url(#KlockRadarBG)" stroke-width="16" />
+    <!-- Flecha curva -->
+    <path d="M 120 310 A 155 155 0 0 1 256 101" fill="none" stroke="url(#KlockRadarBG)" stroke-width="28" stroke-linecap="round" />
+    <polygon points="100,298 88,340 132,318" fill="#7c3aed" />
+    <!-- Flecha diagonal -->
+    <line x1="240" y1="272" x2="360" y2="152" stroke="url(#KlockRadarArrow)" stroke-width="26" stroke-linecap="round" />
+    <polygon points="356,140 400,128 384,172" fill="#9333ea" />
+    <!-- Punto central -->
+    <circle cx="256" cy="256" r="22" fill="url(#KlockRadarBG)" />
+  </g>
+
+  <!-- ══════════════════════ WORDMARK ══════════════════════ -->
+  <g transform="translate(148, 28)" font-family="'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif">
+    <!-- K -->
+    <text x="0" y="66" font-size="78" font-weight="800" letter-spacing="-2.2" fill="url(#KlockWordmark)">K</text>
+    <!-- l -->
+    <text x="63" y="66" font-size="78" font-weight="800" letter-spacing="-2.2" fill="url(#KlockWordmark)">l</text>
+
+    <!-- O = mini dial Klock (violeta) -->
+    <circle cx="122" cy="48" r="23.5"
+            fill="none" stroke="url(#KlockMiniO)" stroke-width="3.7" stroke-linecap="round"/>
+    <!-- Interior O -->
+    <circle cx="122" cy="48" r="19.8" fill="var(--klock-primary-bg, rgba(124, 58, 237, 0.10))"/>
+    
+    <!-- c y k -->
+    <text x="164" y="66" font-size="78" font-weight="800" letter-spacing="-2.2" fill="url(#KlockWordmark)">ck</text>
+
+    <!-- Tagline: primary violeta -->
+    <text x="2" y="100"
+          font-size="13"
+          font-weight="600"
+          letter-spacing="7.2"
+          fill="var(--klock-primary, #7C3AED)">
+      TIEMPO · PRECISIÓN
+    </text>
+  </g>
+
+  <!-- LED violeta "ON" (antes verde) -->
+  <circle cx="424" cy="126" r="3.6" fill="var(--klock-primary, #7C3AED)">
+    <animate attributeName="opacity" values="0.42;1;0.42" dur="2.2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
