@@ -3773,3 +3773,63 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 640px) {
   .root-companies { grid-template-columns: 1fr; }
 }
+
+/* ─── Shell embebido (dentro de turnos): sin sidebar/header propios ──────── */
+.embed-shell {
+  min-height: 100vh;
+  width: 100%;
+  background:
+    radial-gradient(1200px 400px at 50% -120px, color-mix(in srgb, var(--klock-primary, #7c3aed) 10%, transparent), transparent 70%),
+    var(--klock-bg, var(--clr-bg));
+  padding: 1.25rem clamp(1rem, 3vw, 2rem) 2rem;
+  box-sizing: border-box;
+}
+
+/* La página académica embebida vive en una tarjeta limpia a lo ancho */
+.embed-shell .academic {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: var(--klock-surface, var(--clr-surface));
+  border: 1px solid var(--klock-border, var(--clr-border));
+  border-radius: 18px;
+  box-shadow: var(--klock-shadow-lg, 0 20px 52px rgba(15, 23, 42, .14));
+  padding: 1.5rem clamp(1rem, 2.5vw, 1.75rem);
+}
+
+/* Encabezado de la gestión académica — un poco más marcado */
+.embed-shell .academic__header h1 { font-size: 1.5rem; letter-spacing: -.3px; }
+.embed-shell .academic__header p { font-size: .95rem; }
+
+/* Pestañas tipo "chips" con mejor contraste y scroll horizontal en móvil */
+.embed-shell .academic__tabs {
+  gap: .5rem;
+  border-bottom: 1px solid var(--klock-border, var(--clr-border));
+  margin-bottom: .25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.embed-shell .academic__tabs button {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: .5rem .95rem;
+  font-weight: 600;
+  background: var(--klock-bg, var(--clr-bg));
+  border-color: var(--klock-border, var(--clr-border));
+  color: var(--klock-text-2, var(--clr-text-2));
+}
+.embed-shell .academic__tabs button:hover {
+  border-color: color-mix(in srgb, var(--klock-primary, #7c3aed) 45%, transparent);
+  color: var(--klock-primary, #7c3aed);
+  background: color-mix(in srgb, var(--klock-primary, #7c3aed) 8%, transparent);
+}
+.embed-shell .academic__tabs button.is-active {
+  background: var(--klock-primary, #7c3aed);
+  border-color: var(--klock-primary, #7c3aed);
+  color: #fff;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--klock-primary, #7c3aed) 32%, transparent);
+}
+
+@media (max-width: 640px) {
+  .embed-shell { padding: .75rem; }
+  .embed-shell .academic { padding: 1rem; border-radius: 14px; }
+}
