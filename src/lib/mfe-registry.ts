@@ -219,3 +219,30 @@ function readStored(): MfeEntry[] {
     return Array.isArray(list) ? list.map(normalize) : []
   } catch { return [] }
 }
+
+// ── Sincronización con el backend del Host (turnos) ─────────────────────────
+// El registro vive en el backend del portal para compartirse entre usuarios.
+// localStorage actúa como caché local para arranque instantáneo/offline.
+
+/** Carga el registro desde el backend y lo cachea en localStorage. */
+export async function loadMfesFromServer(authToken: string): Promise<void> {
+  const { apiRequest } = await import('./api')
+  try {
+    const r = await apiRequest<{ mfes: Partial<MfeEntry>[] }>('/root/mfe-config', { token: authToken })
+    const list = Array.isArray(r.mfes) ? r.mfes.map(normalize) : []
+    // Guardamos solo los overrides/no-builtins (igual que readStored espera).
+    saveMfes(list)
+  } catch {
+    /* sin red o sin permiso: se usa la caché local */
+  }
+}
+
+/** Persiste el registro actual (overrides + MFEs del usuario) en el backend. */
+export async function saveMfesToServer(authToken: string): Promise<void> {
+  const { apiRequest } = await import('./api')
+  try {
+    await apiRequest('/root/mfe-config', { method: 'PUT', token: authToken, body: { mfes: readStored() } })
+  } catch {
+    /* si falla, queda la caché local; se reintenta en el próximo guardado */
+  }
+}

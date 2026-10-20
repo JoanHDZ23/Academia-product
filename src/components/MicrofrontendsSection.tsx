@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Boxes, Plus, Trash2, Eye, EyeOff, Puzzle, Play, Settings } from 'lucide-react'
 import { Button, Input, Select, Checkbox, Badge } from './ui'
 import { Modal } from './Modal'
 import { DynamicMicrofrontend } from './DynamicMicrofrontend'
 import {
   getMfes, addMfe, removeMfe, toggleMfe, validateMfe, setMfeConfig, getMfeConfig,
+  loadMfesFromServer, saveMfesToServer,
   type MfeEntry, type MfeType, type MfeConfigValues,
 } from '../lib/mfe-registry'
 
 interface Props {
   /** Compañías disponibles para configurar el MFE (id + nombre). */
   companies?: Array<{ id: string; nombre: string }>
+  /** Token root para persistir el registro en el backend del Host. */
+  token?: string | null
 }
 
 /**
@@ -19,7 +22,7 @@ interface Props {
  * - Trazabilidad y academia aparecen como MFE integrados (removibles).
  * - Cada MFE define opciones de configuración editables POR COMPAÑÍA.
  */
-export function MicrofrontendsSection({ companies = [] }: Props) {
+export function MicrofrontendsSection({ companies = [], token }: Props) {
   const [list, setList] = useState<MfeEntry[]>(() => getMfes())
   const [type, setType] = useState<MfeType>('iframe')
   const [name, setName] = useState('')
@@ -29,7 +32,17 @@ export function MicrofrontendsSection({ companies = [] }: Props) {
   const [preview, setPreview] = useState<MfeEntry | null>(null)
   const [configTarget, setConfigTarget] = useState<MfeEntry | null>(null)
 
-  const refresh = () => setList(getMfes())
+  // Carga el registro desde el backend del Host al montar (compartido entre usuarios).
+  useEffect(() => {
+    if (!token) return
+    void loadMfesFromServer(token).then(() => setList(getMfes()))
+  }, [token])
+
+  // Refresca la lista local y persiste en el backend tras cada cambio.
+  const refresh = () => {
+    setList(getMfes())
+    if (token) void saveMfesToServer(token)
+  }
 
   const handleAdd = () => {
     const err = validateMfe({ name, type, url, tag })
