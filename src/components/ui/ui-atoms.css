@@ -1,0 +1,96 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Átomos/moléculas reutilizables (Atomic Design) para el sistema Klock.
+   Usa los tokens --klock-* ya definidos. Solo agrega lo que NO existía:
+   campos con label/error, tonos de badge y variantes success/loading de botón.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ── Field (molécula label + control + error/hint) ── */
+.ui-field { display: block; width: 100%; }
+.ui-field__label {
+  display: block;
+  margin-bottom: .35rem;
+  font-size: var(--klock-sm);
+  font-weight: 600;
+  color: var(--klock-text-2);
+}
+.ui-field__req { color: var(--klock-danger); margin-left: .15rem; }
+.ui-field__error {
+  margin-top: .3rem;
+  font-size: var(--klock-xs);
+  color: var(--klock-danger);
+}
+.ui-field__hint {
+  margin-top: .3rem;
+  font-size: var(--klock-xs);
+  color: var(--klock-text-3);
+}
+/* Control inválido: borde de peligro (gana al selector global con el mismo peso) */
+.ui-control--invalid,
+.ui-control--invalid:focus {
+  border-color: var(--klock-danger) !important;
+  box-shadow: 0 0 0 3px var(--klock-danger-bg) !important;
+}
+
+/* ── Checkbox (átomo) ── */
+.ui-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: .6rem;
+  cursor: pointer;
+  user-select: none;
+}
+.ui-checkbox input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: .1rem;
+  flex-shrink: 0;
+  accent-color: var(--klock-primary);
+}
+.ui-checkbox__label { font-size: var(--klock-body); color: var(--klock-text); }
+.ui-checkbox__hint { display: block; font-size: var(--klock-xs); color: var(--klock-text-3); }
+
+/* ── Badge (átomo) con tonos ── */
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .55rem;
+  border-radius: var(--klock-radius-pill);
+  font-size: var(--klock-xs);
+  font-weight: 600;
+  letter-spacing: .02em;
+  border: 1px solid transparent;
+}
+.ui-badge--neutral  { background: var(--klock-surface-3); color: var(--klock-text-2); border-color: var(--klock-border); }
+.ui-badge--primary  { background: var(--klock-primary-bg); color: var(--klock-primary-500); border-color: var(--klock-primary-bg-strong); }
+.ui-badge--success  { background: var(--klock-success-bg); color: var(--klock-success); border-color: color-mix(in srgb, var(--klock-success) 30%, transparent); }
+.ui-badge--warning  { background: var(--klock-warning-bg); color: var(--klock-warning); border-color: color-mix(in srgb, var(--klock-warning) 30%, transparent); }
+.ui-badge--danger   { background: var(--klock-danger-bg);  color: var(--klock-danger);  border-color: color-mix(in srgb, var(--klock-danger) 30%, transparent); }
+.ui-badge--info     { background: var(--klock-violet-bg);  color: var(--klock-violet);  border-color: color-mix(in srgb, var(--klock-violet) 30%, transparent); }
+:root[data-theme="light"] .ui-badge--primary { color: var(--klock-primary); }
+
+/* ── Botón: variantes success y estado loading (complementan .button--*) ── */
+.button--success {
+  background: var(--klock-success) !important;
+  border-color: var(--klock-success) !important;
+  color: #fff !important;
+  border-radius: var(--klock-radius-lg) !important;
+  box-shadow: var(--klock-shadow-success) !important;
+}
+.button--success:hover:not(:disabled) { filter: brightness(1.05); }
+.button--danger {
+  background: var(--klock-danger) !important;
+  border-color: var(--klock-danger) !important;
+  color: #fff !important;
+  border-radius: var(--klock-radius-lg) !important;
+}
+.button--danger:hover:not(:disabled) { filter: brightness(1.05); }
+.button__spinner {
+  width: 1rem; height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: ui-spin .6s linear infinite;
+}
+@keyframes ui-spin { to { transform: rotate(360deg); } }
