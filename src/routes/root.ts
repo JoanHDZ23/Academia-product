@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { academiaModules, getDefaultSettings } from '../lib/access.js'
 import { hashPassword, signToken } from '../lib/auth.js'
 import { deleteCompany } from '../lib/database.js'
-import { getCompaniesCollection, getUsersCollection } from '../lib/mongodb.js'
+import { getCompaniesCollection, getUsersCollection, getDb } from '../lib/mongodb.js'
 import { requireAuth, requireRoot } from '../middleware/auth.js'
 import type { AccessModule } from '../types.js'
 
@@ -205,4 +205,39 @@ rootRouter.delete('/companies/:companyId', async (request, response) => {
   }
   await deleteCompany(companyId)
   response.json({ message: `Institución ${(company as any).nombre} y sus datos asociados fueron eliminados.` })
+})
+
+// ── Registro de Microfrontends (config por compañía) ────────────────────────
+// Persiste el registro de MFEs del portal de academia en su propio backend.
+const MFE_DOC_ID = 'registry'
+
+rootRouter.get('/mfe-config', async (_request, response) => {
+  try {
+    const db = await getDb()
+    const doc = await db.collection('mfe_config').findOne({ _id: MFE_DOC_ID as never })
+    response.json({ mfes: (doc?.mfes as unknown[]) ?? [] })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    response.status(500).json({ message: 'Error al leer la configuración de microfrontends.', detail: message })
+  }
+})
+
+rootRouter.put('/mfe-config', async (request, response) => {
+  const { mfes } = request.body as { mfes?: unknown[] }
+  if (!Array.isArray(mfes)) {
+    response.status(400).json({ message: 'El cuerpo debe incluir un arreglo `mfes`.' })
+    return
+  }
+  try {
+    const db = await getDb()
+    await db.collection('mfe_config').updateOne(
+      { _id: MFE_DOC_ID as never },
+      { $set: { mfes, updatedAt: new Date().toISOString() } },
+      { upsert: true },
+    )
+    response.json({ message: 'Configuración de microfrontends guardada.', count: mfes.length })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    response.status(500).json({ message: 'Error al guardar la configuración de microfrontends.', detail: message })
+  }
 })
