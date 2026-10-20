@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Settings } from 'lucide-react'
 import { Button, CustomForm, Modal, type CustomFormField, type CustomFormValues } from '../components'
-import { MicrofrontendsSection } from '../components/MicrofrontendsSection'
+import { MicrofrontendsSection, MfeConfigModal } from '../components/MicrofrontendsSection'
+import { getMfes, type MfeEntry } from '../lib/mfe-registry'
 import { apiRequest } from '../lib/api'
 import { assignableFeatures } from '../lib/access'
 
@@ -49,6 +51,7 @@ export default function RootPanelPage() {
   // Modal de funciones (módulos)
   const [featuresCompany, setFeaturesCompany] = useState<RootCompany | null>(null)
   const [featuresDraft, setFeaturesDraft] = useState<string[]>([])
+  const [featuresMfe, setFeaturesMfe] = useState<MfeEntry | null>(null)
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // Eliminar institución
@@ -292,6 +295,31 @@ export default function RootPanelPage() {
             )
           })}
         </div>
+
+        {/* Microfrontends activos: configuración por institución.
+            Al agregar un MFE aparece aquí; al eliminarlo/desactivarlo desaparece. */}
+        {(() => {
+          const activeMfes = getMfes().filter((m) => m.enabled && m.configSchema.length > 0)
+          if (activeMfes.length === 0) return null
+          return (
+            <div className="root-features__list" style={{ marginTop: '.75rem' }}>
+              {activeMfes.map((m) => (
+                <div key={m.id} className="root-feature root-feature--on">
+                  <span className="root-feature__text" style={{ flex: 1 }}>
+                    <strong>{m.name}</strong>
+                    <small>{m.type === 'iframe' ? 'Módulo embebido' : 'Web Component'} · opciones por institución</small>
+                  </span>
+                  <button type="button" title={`Configurar ${m.name}`} aria-label={`Configurar ${m.name}`}
+                    onClick={() => setFeaturesMfe(m)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--klock-text-2)' }}>
+                    <Settings size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
+
         <div className="academic-actions-end" style={{ marginTop: '1rem' }}>
           <Button variant="ghost" onClick={() => setFeaturesCompany(null)}>Cancelar</Button>
           <Button variant="primary" disabled={savingFeatures} onClick={() => void saveFeatures()}>
@@ -299,6 +327,16 @@ export default function RootPanelPage() {
           </Button>
         </div>
       </Modal>
+
+      {/* Configuración por institución de un MFE del registro */}
+      {featuresMfe && (
+        <MfeConfigModal
+          mfe={featuresMfe}
+          companies={featuresCompany ? [{ id: featuresCompany.id, nombre: featuresCompany.nombre }] : companies.map((c) => ({ id: c.id, nombre: c.nombre }))}
+          onClose={() => setFeaturesMfe(null)}
+          onSaved={() => setFeaturesMfe(null)}
+        />
+      )}
 
       {/* Eliminar */}
       <Modal open={deleteTarget !== null} title="Eliminar institución" onClose={() => setDeleteTarget(null)}>

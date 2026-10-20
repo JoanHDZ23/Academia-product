@@ -160,7 +160,7 @@ export function MicrofrontendsSection({ companies = [], token }: Props) {
 }
 
 // ── Modal: configurar un MFE para una compañía concreta ─────────────────────
-function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
+export function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
   mfe: MfeEntry
   companies: Array<{ id: string; nombre: string }>
   onClose: () => void
