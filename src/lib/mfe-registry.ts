@@ -148,7 +148,7 @@ export function getMfes(): MfeEntry[] {
   // si no, se muestra el preset por defecto. Primero los builtins, luego el resto.
   const merged: MfeEntry[] = BUILTIN_MFES.map((b) => {
     const override = stored.find((s) => s.id === b.id)
-    return override ? { ...b, ...override, builtin: true, configSchema: b.configSchema } : b
+    return override ? { ...b, ...override, builtin: true, configSchema: b.configSchema, featureKey: b.featureKey } : b
   })
   for (const s of stored) {
     if (!BUILTIN_MFES.some((b) => b.id === s.id)) merged.push(s)
