@@ -46,6 +46,9 @@ export interface MfeEntry {
   tag?: string
   /** Activo/inactivo sin borrarlo. */
   enabled: boolean
+  /** Vincula este MFE a una "función" del panel (enabledModules). Si está
+   *  definido, su configuración aparece integrada en esa función cuando está activa. */
+  featureKey?: string
   /** Campos de configuración que ofrece este MFE. */
   configSchema: MfeConfigField[]
   /** Configuración guardada por compañía (companyId → valores). */
@@ -71,6 +74,7 @@ export const BUILTIN_MFES: MfeEntry[] = [
     type: 'iframe',
     url: TRACER_URL,
     apiUrl: TRACER_API,
+    featureKey: 'trazabilidad',
     enabled: true,
     builtin: true,
     createdAt: new Date(0).toISOString(),
@@ -91,6 +95,7 @@ export const BUILTIN_MFES: MfeEntry[] = [
     type: 'iframe',
     url: ACADEMIA_URL,
     apiUrl: ACADEMIA_API,
+    featureKey: 'academia',
     enabled: true,
     builtin: true,
     createdAt: new Date(0).toISOString(),
@@ -113,6 +118,7 @@ function normalize(entry: Partial<MfeEntry>): MfeEntry {
     type: entry.type ?? 'webcomponent',
     url: entry.url ?? '',
     apiUrl: entry.apiUrl,
+    featureKey: entry.featureKey,
     tag: entry.tag,
     enabled: entry.enabled ?? true,
     configSchema: entry.configSchema ?? [],
@@ -211,6 +217,11 @@ export function setMfeConfig(id: string, companyId: string, values: MfeConfigVal
   // Override inicial de un builtin.
   const base = BUILTIN_MFES.find((b) => b.id === id)
   if (base) saveMfes([...stored, { ...base, configByCompany: { [companyId]: values } }])
+}
+
+/** MFE activo vinculado a una "función" (featureKey), si existe y tiene opciones. */
+export function getMfeForFeature(featureKey: string): MfeEntry | undefined {
+  return getMfes().find((m) => m.enabled && m.featureKey === featureKey && m.configSchema.length > 0)
 }
 
 /** Config efectiva de un MFE para una compañía (defaults del schema + overrides). */

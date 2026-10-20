@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Settings } from 'lucide-react'
 import { Button, CustomForm, Modal, type CustomFormField, type CustomFormValues } from '../components'
 import { MicrofrontendsSection, MfeConfigModal } from '../components/MicrofrontendsSection'
-import { getMfes, type MfeEntry } from '../lib/mfe-registry'
+import { getMfeForFeature, type MfeEntry } from '../lib/mfe-registry'
 import { apiRequest } from '../lib/api'
 import { assignableFeatures } from '../lib/access'
 
@@ -278,47 +278,35 @@ export default function RootPanelPage() {
         <div className="root-features__list">
           {assignableFeatures.map((f) => {
             const checked = featuresDraft.includes(f.key) || Boolean(f.locked)
+            // MFE vinculado a esta función (activo y con opciones).
+            const linkedMfe = getMfeForFeature(f.key)
             return (
-              <label key={f.key} className={`root-feature ${checked ? 'root-feature--on' : ''}`}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={Boolean(f.locked)}
-                  onChange={() => toggleFeatureDraft(f.key)}
-                />
-                <span className="root-feature__icon">{f.icon}</span>
-                <span className="root-feature__text">
-                  <strong>{f.label}</strong>
-                  {f.description && <small>{f.description}</small>}
-                </span>
-              </label>
-            )
-          })}
-        </div>
-
-        {/* Microfrontends activos: configuración por institución.
-            Al agregar un MFE aparece aquí; al eliminarlo/desactivarlo desaparece. */}
-        {(() => {
-          const activeMfes = getMfes().filter((m) => m.enabled && m.configSchema.length > 0)
-          if (activeMfes.length === 0) return null
-          return (
-            <div className="root-features__list" style={{ marginTop: '.75rem' }}>
-              {activeMfes.map((m) => (
-                <div key={m.id} className="root-feature root-feature--on">
-                  <span className="root-feature__text" style={{ flex: 1 }}>
-                    <strong>{m.name}</strong>
-                    <small>{m.type === 'iframe' ? 'Módulo embebido' : 'Web Component'} · opciones por institución</small>
+              <div key={f.key} className={`root-feature ${checked ? 'root-feature--on' : ''}`}>
+                <label className="root-feature__main" style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flex: 1, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={Boolean(f.locked)}
+                    onChange={() => toggleFeatureDraft(f.key)}
+                  />
+                  <span className="root-feature__icon">{f.icon}</span>
+                  <span className="root-feature__text">
+                    <strong>{f.label}</strong>
+                    {f.description && <small>{f.description}</small>}
                   </span>
-                  <button type="button" title={`Configurar ${m.name}`} aria-label={`Configurar ${m.name}`}
-                    onClick={() => setFeaturesMfe(m)}
+                </label>
+                {/* Opciones del MFE: solo si la función está activa y hay un MFE vinculado. */}
+                {checked && linkedMfe && (
+                  <button type="button" title={`Configurar ${linkedMfe.name}`} aria-label={`Configurar ${linkedMfe.name}`}
+                    onClick={() => setFeaturesMfe(linkedMfe)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--klock-text-2)' }}>
                     <Settings size={18} />
                   </button>
-                </div>
-              ))}
-            </div>
-          )
-        })()}
+                )}
+              </div>
+            )
+          })}
+        </div>
 
         <div className="academic-actions-end" style={{ marginTop: '1rem' }}>
           <Button variant="ghost" onClick={() => setFeaturesCompany(null)}>Cancelar</Button>
