@@ -252,7 +252,7 @@ export default function RootPanelPage() {
       )}
 
       {/* Microfrontends dinámicos — se agregan por URL, sin recompilar el Host */}
-      <MicrofrontendsSection />
+      <MicrofrontendsSection companies={companies.map((c) => ({ id: c.id, nombre: c.nombre }))} />
 
       {/* Crear institución */}
       <Modal open={showCreate} title="Nueva institución" onClose={() => setShowCreate(false)}>

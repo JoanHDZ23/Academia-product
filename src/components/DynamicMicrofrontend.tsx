@@ -11,11 +11,13 @@ import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react'
  */
 
 export interface DynamicMicrofrontendProps {
-  /** URL absoluta del bundle .js del microfrontend. */
+  /** Forma de integración. Por defecto `'webcomponent'`. */
+  type?: 'iframe' | 'webcomponent'
+  /** URL del bundle .js (webcomponent) o de la app (iframe). */
   scriptUrl: string
-  /** Nombre del Custom Element que el bundle registra (p. ej. `mfe-ventas`). */
-  tagName: string
-  /** Props/atributos a pasar al Web Component. Strings → atributos; objetos → propiedades. */
+  /** Nombre del Custom Element que el bundle registra (solo webcomponent). */
+  tagName?: string
+  /** Props a pasar: al web component como atributos/propiedades; al iframe como query params + postMessage. */
   props?: Record<string, unknown>
   /** Eventos personalizados del MFE a escuchar: { 'nombre-evento': handler }. */
   events?: Record<string, (detail: unknown) => void>
@@ -69,7 +71,7 @@ function loadScript(url: string, timeout: number): Promise<void> {
 }
 
 export function DynamicMicrofrontend({
-  scriptUrl, tagName, props, events, timeout = 15000, style, className,
+  type = 'webcomponent', scriptUrl, tagName, props, events, timeout = 15000, style, className,
 }: DynamicMicrofrontendProps) {
   const [status, setStatus] = useState<Status>('loading')
   const [errorMsg, setErrorMsg] = useState('')
@@ -77,19 +79,60 @@ export function DynamicMicrofrontend({
   const hostRef = useRef<HTMLDivElement>(null)
   const elRef = useRef<HTMLElement | null>(null)
 
-  // Cargar el script y esperar a que el Custom Element quede definido.
+  // ── Modo IFRAME (apps completas como trazabilidad/academia) ──
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const iframeSrc = (() => {
+    if (type !== 'iframe') return ''
+    try {
+      const u = new URL(scriptUrl)
+      if (props) {
+        for (const [k, v] of Object.entries(props)) {
+          if (v == null) continue
+          u.searchParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v))
+        }
+      }
+      return u.toString()
+    } catch {
+      return scriptUrl
+    }
+  })()
+
+  // Reenvía la config al iframe por postMessage cuando cambian las props.
   useEffect(() => {
+    if (type !== 'iframe' || !iframeRef.current || !props) return
+    const win = iframeRef.current.contentWindow
+    if (win) win.postMessage({ type: 'mfe:config', config: props }, '*')
+  }, [type, props])
+
+  // Escucha eventos que el iframe publique vía postMessage.
+  useEffect(() => {
+    if (type !== 'iframe' || !events) return
+    const onMsg = (e: MessageEvent) => {
+      const data = e.data
+      if (data && typeof data === 'object' && typeof data.type === 'string' && events[data.type]) {
+        events[data.type](data.detail ?? data)
+      }
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [type, events])
+
+  // Cargar el script (solo webcomponent) y esperar a que el tag quede definido.
+  useEffect(() => {
+    if (type === 'iframe') return
     let cancelled = false
     setStatus('loading')
     setErrorMsg('')
 
+    if (!tagName) { setErrorMsg('Falta el tag del Web Component.'); setStatus('error'); return }
+    const tag = tagName
     loadScript(scriptUrl, timeout)
-      .then(() => customElements.whenDefined(tagName).catch(() => { /* algunos definen sincrónicamente */ }))
+      .then(() => customElements.whenDefined(tag).catch(() => { /* algunos definen sincrónicamente */ }))
       .then(() => {
         if (cancelled) return
-        if (!customElements.get(tagName)) {
+        if (!customElements.get(tag)) {
           // El script cargó pero no registró el tag esperado.
-          throw new Error(`El microfrontend no registró el elemento <${tagName}>.`)
+          throw new Error(`El microfrontend no registró el elemento <${tag}>.`)
         }
         setStatus('ready')
       })
@@ -100,11 +143,11 @@ export function DynamicMicrofrontend({
       })
 
     return () => { cancelled = true }
-  }, [scriptUrl, tagName, timeout, attempt])
+  }, [type, scriptUrl, tagName, timeout, attempt])
 
   // Crear/actualizar el Custom Element y sincronizar props cuando esté listo.
   useEffect(() => {
-    if (status !== 'ready' || !hostRef.current) return
+    if (type === 'iframe' || status !== 'ready' || !hostRef.current || !tagName) return
     const host = hostRef.current
 
     let el = elRef.current
@@ -139,6 +182,20 @@ export function DynamicMicrofrontend({
     })
     return () => { wrapped.forEach(([name, listener]) => el.removeEventListener(name, listener)) }
   }, [status, events])
+
+  // ── Render iframe (apps completas embebidas) ──
+  if (type === 'iframe') {
+    return (
+      <iframe
+        ref={iframeRef}
+        src={iframeSrc}
+        title="Microfrontend"
+        className={className}
+        style={{ width: '100%', border: 'none', minHeight: 320, ...style }}
+        allow="camera; microphone; geolocation; clipboard-write"
+      />
+    )
+  }
 
   if (status === 'loading') {
     return (
