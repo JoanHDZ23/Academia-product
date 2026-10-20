@@ -295,8 +295,8 @@ export default function RootPanelPage() {
                     {f.description && <small>{f.description}</small>}
                   </span>
                 </label>
-                {/* Opciones del MFE: solo si la función está activa y hay un MFE vinculado. */}
-                {checked && linkedMfe && (
+                {/* Opciones del MFE: solo si la función está activa, hay MFE vinculado y tiene opciones. */}
+                {checked && linkedMfe && linkedMfe.configSchema.length > 0 && (
                   <button type="button" title={`Configurar ${linkedMfe.name}`} aria-label={`Configurar ${linkedMfe.name}`}
                     onClick={() => setFeaturesMfe(linkedMfe)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--klock-text-2)' }}>

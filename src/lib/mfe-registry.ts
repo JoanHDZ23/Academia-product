@@ -78,15 +78,10 @@ export const BUILTIN_MFES: MfeEntry[] = [
     enabled: true,
     builtin: true,
     createdAt: new Date(0).toISOString(),
-    configSchema: [
-      { key: 'watermark', label: 'Marca de agua en fotos', type: 'boolean', default: true, hint: 'Estampar fecha, hora y ubicación.' },
-      { key: 'activityLog', label: 'Registro de actividades', type: 'boolean', default: false },
-      { key: 'sendEmail', label: 'Enviar registros por correo', type: 'boolean', default: false },
-      { key: 'emailTo', label: 'Correo(s) destinatario(s)', type: 'text', default: '', hint: 'Separados por coma.' },
-      { key: 'whatsappAudio', label: 'Notas de voz', type: 'boolean', default: false },
-      { key: 'whatsappDocument', label: 'Adjuntar documentos', type: 'boolean', default: false },
-      { key: 'markerEditor', label: 'Editor de imágenes', type: 'boolean', default: false },
-    ],
+    // Trazabilidad usa su propio modal de ajustes (trazabilidadSettings), que ya
+    // se sincroniza con su backend. Por eso NO duplica aquí su configSchema: su
+    // configuración es la única fuente de verdad del canal existente.
+    configSchema: [],
     configByCompany: {},
   },
   {
@@ -219,9 +214,9 @@ export function setMfeConfig(id: string, companyId: string, values: MfeConfigVal
   if (base) saveMfes([...stored, { ...base, configByCompany: { [companyId]: values } }])
 }
 
-/** MFE activo vinculado a una "función" (featureKey), si existe y tiene opciones. */
+/** MFE activo vinculado a una "función" (featureKey), si existe. */
 export function getMfeForFeature(featureKey: string): MfeEntry | undefined {
-  return getMfes().find((m) => m.enabled && m.featureKey === featureKey && m.configSchema.length > 0)
+  return getMfes().find((m) => m.enabled && m.featureKey === featureKey)
 }
 
 /** Config efectiva de un MFE para una compañía (defaults del schema + overrides). */
