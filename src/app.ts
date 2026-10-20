@@ -1,6 +1,7 @@
 import cors from 'cors'
 import express from 'express'
 import { academicRouter } from './routes/academic.js'
+import { mfeRouter } from './routes/mfe.js'
 import { academicAttendanceRouter } from './routes/academic-attendance.js'
 import { authRouter } from './routes/auth.js'
 import { companiesRouter } from './routes/companies.js'
@@ -42,6 +43,7 @@ app.use('/api/root', rootRouter)
 app.use('/api/companies', companiesRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/locations', locationsRouter)
+app.use('/api/mfe', mfeRouter)
 app.use('/api/academic', academicRouter)
 app.use('/api/academic-attendance', academicAttendanceRouter)
 
