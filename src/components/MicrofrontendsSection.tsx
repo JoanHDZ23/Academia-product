@@ -5,8 +5,8 @@ import { Modal } from './Modal'
 import { DynamicMicrofrontend } from './DynamicMicrofrontend'
 import {
   getMfes, addMfe, removeMfe, toggleMfe, validateMfe, setMfeConfig, getMfeConfig,
-  loadMfesFromServer, saveMfesToServer,
-  type MfeEntry, type MfeType, type MfeConfigValues,
+  loadMfesFromServer, saveMfesToServer, fetchMfeSchema,
+  type MfeEntry, type MfeType, type MfeConfigValues, type MfeConfigField,
 } from '../lib/mfe-registry'
 
 interface Props {
@@ -167,7 +167,20 @@ function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
   onSaved: () => void
 }) {
   const [companyId, setCompanyId] = useState(companies[0]?.id ?? '')
+  // Esquema efectivo: el descubierto desde el backend del MFE (si responde) o el guardado.
+  const [schema, setSchema] = useState<MfeConfigField[]>(mfe.configSchema)
+  const [schemaLoading, setSchemaLoading] = useState(false)
   const [values, setValues] = useState<MfeConfigValues>(() => (companyId ? getMfeConfig(mfe, companyId) : {}))
+
+  // Descubre el esquema real desde el backend del MFE al abrir el modal.
+  useEffect(() => {
+    if (!mfe.apiUrl) return
+    setSchemaLoading(true)
+    void fetchMfeSchema(mfe.apiUrl).then((fields) => {
+      if (fields && fields.length) setSchema(fields)
+      setSchemaLoading(false)
+    })
+  }, [mfe.apiUrl])
 
   const onCompanyChange = (id: string) => {
     setCompanyId(id)
@@ -189,8 +202,11 @@ function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
           placeholder={companies.length ? undefined : 'No hay compañías'}
           options={companies.map((c) => ({ label: c.nombre, value: c.id }))} />
 
+        {schemaLoading && (
+          <p style={{ fontSize: 'var(--klock-xs)', color: 'var(--klock-text-3)' }}>Cargando opciones del módulo…</p>
+        )}
         {companyId ? (
-          mfe.configSchema.map((f) => {
+          schema.map((f) => {
             if (f.type === 'boolean') {
               return (
                 <Checkbox key={f.key} label={f.label} hint={f.hint}

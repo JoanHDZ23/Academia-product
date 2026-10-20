@@ -40,6 +40,8 @@ export interface MfeEntry {
   type: MfeType
   /** URL del bundle .js (webcomponent) o de la app (iframe). */
   url: string
+  /** URL base del backend del MFE, para descubrir su esquema de config (opcional). */
+  apiUrl?: string
   /** Tag del Custom Element (solo webcomponent). */
   tag?: string
   /** Activo/inactivo sin borrarlo. */
@@ -58,6 +60,9 @@ const KEY = 'ommex_mfe_registry'
 // ── Presets de los productos actuales como MFE tipo iframe ──────────────────
 const TRACER_URL = (import.meta.env.VITE_TRACER_URL as string) || 'https://ommex-tracer.vercel.app'
 const ACADEMIA_URL = (import.meta.env.VITE_ACADEMIA_URL as string) || 'https://ommex-academia.vercel.app'
+// URLs de los backends de cada MFE (para descubrir su esquema de configuración).
+const TRACER_API = (import.meta.env.VITE_TRACER_API_URL as string) || 'https://micro-ommex-traser.onrender.com/api'
+const ACADEMIA_API = (import.meta.env.VITE_ACADEMIA_API_URL as string) || 'https://ommex-academia-backend.onrender.com/api'
 
 export const BUILTIN_MFES: MfeEntry[] = [
   {
@@ -65,6 +70,7 @@ export const BUILTIN_MFES: MfeEntry[] = [
     name: 'Trazabilidad',
     type: 'iframe',
     url: TRACER_URL,
+    apiUrl: TRACER_API,
     enabled: true,
     builtin: true,
     createdAt: new Date(0).toISOString(),
@@ -84,6 +90,7 @@ export const BUILTIN_MFES: MfeEntry[] = [
     name: 'Academia',
     type: 'iframe',
     url: ACADEMIA_URL,
+    apiUrl: ACADEMIA_API,
     enabled: true,
     builtin: true,
     createdAt: new Date(0).toISOString(),
@@ -105,6 +112,7 @@ function normalize(entry: Partial<MfeEntry>): MfeEntry {
     name: entry.name ?? 'Módulo',
     type: entry.type ?? 'webcomponent',
     url: entry.url ?? '',
+    apiUrl: entry.apiUrl,
     tag: entry.tag,
     enabled: entry.enabled ?? true,
     configSchema: entry.configSchema ?? [],
@@ -234,6 +242,23 @@ export async function loadMfesFromServer(authToken: string): Promise<void> {
     saveMfes(list)
   } catch {
     /* sin red o sin permiso: se usa la caché local */
+  }
+}
+
+/**
+ * Descubre el esquema de configuración REAL de un MFE consultando su backend
+ * (`GET {apiUrl}/mfe/config-schema`). Así las opciones salen del propio
+ * microfrontend, no duplicadas en el portal. Devuelve null si no responde.
+ */
+export async function fetchMfeSchema(apiUrl: string): Promise<MfeConfigField[] | null> {
+  try {
+    const base = apiUrl.replace(/\/$/, '')
+    const res = await fetch(`${base}/mfe/config-schema`, { headers: { Accept: 'application/json' } })
+    if (!res.ok) return null
+    const data = (await res.json()) as { fields?: MfeConfigField[] }
+    return Array.isArray(data.fields) ? data.fields : null
+  } catch {
+    return null
   }
 }
 
