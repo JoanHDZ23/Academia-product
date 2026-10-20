@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, CustomForm, Modal, type CustomFormField, type CustomFormValues } from '../components'
+import { MicrofrontendsSection } from '../components/MicrofrontendsSection'
 import { apiRequest } from '../lib/api'
 import { assignableFeatures } from '../lib/access'
 
@@ -249,6 +250,9 @@ export default function RootPanelPage() {
           ))}
         </div>
       )}
+
+      {/* Microfrontends dinámicos — se agregan por URL, sin recompilar el Host */}
+      <MicrofrontendsSection />
 
       {/* Crear institución */}
       <Modal open={showCreate} title="Nueva institución" onClose={() => setShowCreate(false)}>
