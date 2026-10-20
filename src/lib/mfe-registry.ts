@@ -12,6 +12,7 @@
  * Persistencia: por ahora en localStorage. El modelo está listo para moverse a
  * una API/BD sin cambiar los consumidores.
  */
+import { useState as reactUseState, useEffect as reactUseEffect } from 'react'
 
 export type MfeType = 'iframe' | 'webcomponent'
 
@@ -60,9 +61,20 @@ export interface MfeEntry {
 
 const KEY = 'ommex_mfe_registry'
 
+// ── Notificación de cambios (para que toda la UI reaccione al vuelo) ────────
+const listeners = new Set<() => void>()
+/** Suscribe un callback que se invoca cuando el registro cambia. Devuelve unsub. */
+export function subscribeMfes(cb: () => void): () => void {
+  listeners.add(cb)
+  return () => { listeners.delete(cb) }
+}
+function notifyMfes(): void {
+  for (const cb of listeners) { try { cb() } catch { /* noop */ } }
+}
+
 // ── Presets de los productos actuales como MFE tipo iframe ──────────────────
 const TRACER_URL = (import.meta.env.VITE_TRACER_URL as string) || 'https://ommex-tracer.vercel.app'
-const ACADEMIA_URL = (import.meta.env.VITE_ACADEMIA_URL as string) || 'https://ommex-academia.vercel.app'
+const ACADEMIA_URL = (import.meta.env.VITE_ACADEMIA_URL as string) || 'https://academia-product-mdw3.vercel.app'
 // URLs de los backends de cada MFE (para descubrir su esquema de configuración).
 const TRACER_API = (import.meta.env.VITE_TRACER_API_URL as string) || 'https://micro-ommex-traser.onrender.com/api'
 const ACADEMIA_API = (import.meta.env.VITE_ACADEMIA_API_URL as string) || 'https://ommex-academia-backend.onrender.com/api'
@@ -146,6 +158,17 @@ export function getMfes(): MfeEntry[] {
 
 export function saveMfes(list: MfeEntry[]): void {
   try { localStorage.setItem(KEY, JSON.stringify(list)) } catch { /* cuota/privado */ }
+  notifyMfes()
+}
+
+/** Hook de React: devuelve los MFEs y re-renderiza cuando el registro cambia. */
+export function useMfes(): MfeEntry[] {
+  const [list, setList] = reactUseState(getMfes())
+  reactUseEffect(() => {
+    const unsub = subscribeMfes(() => setList(getMfes()))
+    return unsub
+  }, [])
+  return list
 }
 
 export function validateMfe(input: { name: string; type: MfeType; url: string; tag?: string }): string | null {

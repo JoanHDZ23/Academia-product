@@ -4,7 +4,7 @@ import { Button, Input, Select, Checkbox, Badge } from './ui'
 import { Modal } from './Modal'
 import { DynamicMicrofrontend } from './DynamicMicrofrontend'
 import {
-  getMfes, addMfe, removeMfe, toggleMfe, validateMfe, setMfeConfig, getMfeConfig,
+  useMfes, addMfe, removeMfe, toggleMfe, validateMfe, setMfeConfig, getMfeConfig,
   loadMfesFromServer, saveMfesToServer, fetchMfeSchema,
   type MfeEntry, type MfeType, type MfeConfigValues, type MfeConfigField,
 } from '../lib/mfe-registry'
@@ -23,7 +23,9 @@ interface Props {
  * - Cada MFE define opciones de configuración editables POR COMPAÑÍA.
  */
 export function MicrofrontendsSection({ companies = [], token }: Props) {
-  const [list, setList] = useState<MfeEntry[]>(() => getMfes())
+  // Estado reactivo compartido: cualquier cambio (agregar/eliminar/desactivar)
+  // re-renderiza esta sección Y el modal de Funciones (ambos usan useMfes).
+  const list = useMfes()
   const [type, setType] = useState<MfeType>('iframe')
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
@@ -35,12 +37,11 @@ export function MicrofrontendsSection({ companies = [], token }: Props) {
   // Carga el registro desde el backend del Host al montar (compartido entre usuarios).
   useEffect(() => {
     if (!token) return
-    void loadMfesFromServer(token).then(() => setList(getMfes()))
+    void loadMfesFromServer(token)
   }, [token])
 
-  // Refresca la lista local y persiste en el backend tras cada cambio.
+  // Persiste en el backend tras cada cambio (el estado ya se refresca solo vía useMfes).
   const refresh = () => {
-    setList(getMfes())
     if (token) void saveMfesToServer(token)
   }
 

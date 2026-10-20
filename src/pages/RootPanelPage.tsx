@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Settings } from 'lucide-react'
 import { Button, CustomForm, Modal, type CustomFormField, type CustomFormValues } from '../components'
 import { MicrofrontendsSection, MfeConfigModal } from '../components/MicrofrontendsSection'
-import { getMfeForFeature, type MfeEntry } from '../lib/mfe-registry'
+import { useMfes, type MfeEntry } from '../lib/mfe-registry'
 import { apiRequest } from '../lib/api'
 import { assignableFeatures } from '../lib/access'
 
@@ -52,6 +52,9 @@ export default function RootPanelPage() {
   const [featuresCompany, setFeaturesCompany] = useState<RootCompany | null>(null)
   const [featuresDraft, setFeaturesDraft] = useState<string[]>([])
   const [featuresMfe, setFeaturesMfe] = useState<MfeEntry | null>(null)
+  // Registro de MFEs reactivo: el modal de Funciones reacciona a activar/desactivar/eliminar.
+  const mfes = useMfes()
+  const mfeForFeature = (featureKey: string) => mfes.find((m) => m.enabled && m.featureKey === featureKey)
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // Eliminar institución
@@ -278,8 +281,8 @@ export default function RootPanelPage() {
         <div className="root-features__list">
           {assignableFeatures.map((f) => {
             const checked = featuresDraft.includes(f.key) || Boolean(f.locked)
-            // MFE vinculado a esta función (activo y con opciones).
-            const linkedMfe = getMfeForFeature(f.key)
+            // MFE vinculado a esta función (reactivo: desaparece al desactivar/eliminar).
+            const linkedMfe = mfeForFeature(f.key)
             return (
               <div key={f.key} className={`root-feature ${checked ? 'root-feature--on' : ''}`}>
                 <label className="root-feature__main" style={{ display: 'flex', alignItems: 'center', gap: '.6rem', flex: 1, cursor: 'pointer' }}>
