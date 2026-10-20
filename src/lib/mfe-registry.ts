@@ -242,6 +242,19 @@ export function getMfeForFeature(featureKey: string): MfeEntry | undefined {
   return getMfes().find((m) => m.enabled && m.featureKey === featureKey)
 }
 
+/**
+ * ¿La función `featureKey` está disponible?
+ * - Si NINGÚN MFE la provee (no hay MFE con ese featureKey) → siempre disponible
+ *   (funciones nativas del portal: WhatsApp, Turnos, etc.).
+ * - Si la provee un MFE → disponible solo si ese MFE está activo.
+ * Así, al desactivar/eliminar el MFE, su función desaparece del panel.
+ */
+export function isFeatureAvailable(featureKey: string): boolean {
+  const providers = getMfes().filter((m) => m.featureKey === featureKey)
+  if (providers.length === 0) return true
+  return providers.some((m) => m.enabled)
+}
+
 /** Config efectiva de un MFE para una compañía (defaults del schema + overrides). */
 export function getMfeConfig(mfe: MfeEntry, companyId: string): MfeConfigValues {
   const base: MfeConfigValues = {}

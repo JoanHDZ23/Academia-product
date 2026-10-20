@@ -55,6 +55,11 @@ export default function RootPanelPage() {
   // Registro de MFEs reactivo: el modal de Funciones reacciona a activar/desactivar/eliminar.
   const mfes = useMfes()
   const mfeForFeature = (featureKey: string) => mfes.find((m) => m.enabled && m.featureKey === featureKey)
+  // Una función provista por un MFE solo está disponible si ese MFE está activo.
+  const featureAvailable = (featureKey: string) => {
+    const providers = mfes.filter((m) => m.featureKey === featureKey)
+    return providers.length === 0 || providers.some((m) => m.enabled)
+  }
   const [savingFeatures, setSavingFeatures] = useState(false)
 
   // Eliminar institución
@@ -279,7 +284,7 @@ export default function RootPanelPage() {
         onClose={() => setFeaturesCompany(null)}
       >
         <div className="root-features__list">
-          {assignableFeatures.map((f) => {
+          {assignableFeatures.filter((f) => featureAvailable(f.key)).map((f) => {
             const checked = featuresDraft.includes(f.key) || Boolean(f.locked)
             // MFE vinculado a esta función (reactivo: desaparece al desactivar/eliminar).
             const linkedMfe = mfeForFeature(f.key)
