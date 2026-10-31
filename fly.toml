@@ -13,9 +13,10 @@ primary_region = "iad"
 [http_service]
   internal_port = 4100
   force_https = true
-  auto_stop_machines = "stop"
+  # Always-on: la máquina NUNCA se apaga ni se suspende por inactividad.
+  auto_stop_machines = "off"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
 
 [[vm]]
   size = "shared-cpu-1x"
