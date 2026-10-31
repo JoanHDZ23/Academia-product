@@ -1,4 +1,4 @@
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://academia-product-o6g6.onrender.com/api'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://academia-ommex.fly.dev/api'
 
 type ApiOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE'

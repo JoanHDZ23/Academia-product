@@ -76,8 +76,8 @@ function notifyMfes(): void {
 const TRACER_URL = (import.meta.env.VITE_TRACER_URL as string) || 'https://ommex-tracer.vercel.app'
 const ACADEMIA_URL = (import.meta.env.VITE_ACADEMIA_URL as string) || 'https://academia-product-mdw3.vercel.app'
 // URLs de los backends de cada MFE (para descubrir su esquema de configuración).
-const TRACER_API = (import.meta.env.VITE_TRACER_API_URL as string) || 'https://micro-ommex-traser.onrender.com/api'
-const ACADEMIA_API = (import.meta.env.VITE_ACADEMIA_API_URL as string) || 'https://ommex-academia-backend.onrender.com/api'
+const TRACER_API = (import.meta.env.VITE_TRACER_API_URL as string) || 'https://micro-traser.fly.dev/api'
+const ACADEMIA_API = (import.meta.env.VITE_ACADEMIA_API_URL as string) || 'https://academia-ommex.fly.dev/api'
 
 export const BUILTIN_MFES: MfeEntry[] = [
   {
