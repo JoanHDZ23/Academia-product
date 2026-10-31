@@ -17,6 +17,7 @@ app.use(cors({
     'http://localhost:5174',
     /\.vercel\.app$/,
     /\.onrender\.com$/,
+    /\.fly\.dev$/,
   ],
   credentials: true,
 }))
