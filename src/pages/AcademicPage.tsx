@@ -648,7 +648,7 @@ function GroupEditor({ token, group, subjects, docentes, estudiantes, locations,
     try {
       await apiRequest('/whatsapp-turnos/send-invitation', {
         method: 'POST', token,
-        body: { companyId: group.companyId, to: phone, url: inviteLink },
+        body: { companyId: group.companyId, userId: getCurrentUser()?.id, to: phone, url: inviteLink },
       })
       notify('success', 'Invitación enviada por WhatsApp.')
       setInvitePhone('')
