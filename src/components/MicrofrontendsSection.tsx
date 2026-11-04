@@ -5,7 +5,7 @@ import { Modal } from './Modal'
 import { DynamicMicrofrontend } from './DynamicMicrofrontend'
 import {
   useMfes, addMfe, removeMfe, toggleMfe, validateMfe, setMfeConfig, getMfeConfig,
-  loadMfesFromServer, saveMfesToServer, fetchMfeSchema,
+  loadMfesFromServer, saveMfesToServer, fetchMfeSchema, syncMfeConfigToBackend, fetchMfeConfig,
   type MfeEntry, type MfeType, type MfeConfigValues, type MfeConfigField,
 } from '../lib/mfe-registry'
 
@@ -152,6 +152,7 @@ export function MicrofrontendsSection({ companies = [], token }: Props) {
         <MfeConfigModal
           mfe={configTarget}
           companies={companies}
+          token={token}
           onClose={() => setConfigTarget(null)}
           onSaved={() => { setConfigTarget(null); refresh() }}
         />
@@ -161,9 +162,10 @@ export function MicrofrontendsSection({ companies = [], token }: Props) {
 }
 
 // ── Modal: configurar un MFE para una compañía concreta ─────────────────────
-export function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
+export function MfeConfigModal({ mfe, companies, token, onClose, onSaved }: {
   mfe: MfeEntry
   companies: Array<{ id: string; nombre: string }>
+  token?: string | null
   onClose: () => void
   onSaved: () => void
 }) {
@@ -173,26 +175,39 @@ export function MfeConfigModal({ mfe, companies, onClose, onSaved }: {
   const [schemaLoading, setSchemaLoading] = useState(false)
   const [values, setValues] = useState<MfeConfigValues>(() => (companyId ? getMfeConfig(mfe, companyId) : {}))
 
-  // Descubre el esquema real desde el backend del MFE al abrir el modal.
+  // Descubre el esquema real y los valores actuales desde el backend del MFE al abrir.
   useEffect(() => {
     if (!mfe.apiUrl) return
     setSchemaLoading(true)
-    void fetchMfeSchema(mfe.apiUrl).then((fields) => {
+    void Promise.all([
+      fetchMfeSchema(mfe.apiUrl),
+      companyId ? fetchMfeConfig(mfe.apiUrl, companyId) : Promise.resolve(null),
+    ]).then(([fields, remoteValues]) => {
       if (fields && fields.length) setSchema(fields)
+      if (remoteValues) setValues(remoteValues)
       setSchemaLoading(false)
     })
-  }, [mfe.apiUrl])
+  }, [mfe.apiUrl, companyId])
 
-  const onCompanyChange = (id: string) => {
+  const onCompanyChange = async (id: string) => {
     setCompanyId(id)
-    setValues(getMfeConfig(mfe, id))
+    if (mfe.apiUrl) {
+      setSchemaLoading(true)
+      const remoteValues = await fetchMfeConfig(mfe.apiUrl, id)
+      if (remoteValues) setValues(remoteValues)
+      setSchemaLoading(false)
+    } else {
+      setValues(getMfeConfig(mfe, id))
+    }
   }
   const setField = (key: string, value: string | number | boolean) =>
     setValues((v) => ({ ...v, [key]: value }))
 
-  const save = () => {
+  const save = async () => {
     if (!companyId) return
     setMfeConfig(mfe.id, companyId, values)
+    // Sincroniza con el backend real del MFE (peso del Root Panel).
+    await syncMfeConfigToBackend(mfe, companyId, values, token ?? undefined)
     onSaved()
   }
 

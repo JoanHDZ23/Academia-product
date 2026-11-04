@@ -165,6 +165,14 @@ export default function RootPanelPage() {
         method: 'PATCH', token, body: { enabledModules: featuresDraft },
       })
       notify('success', 'Funciones actualizadas.')
+      // Notificación instantánea: si se cambian módulos, avisamos a los MFEs.
+      const channel = new BroadcastChannel('ommex_tracer_refresh')
+      channel.postMessage('refresh')
+      channel.close()
+      document.querySelectorAll('iframe').forEach((iframe) => {
+        iframe.contentWindow?.postMessage({ type: 'trazabilidad:refresh' }, '*')
+      })
+
       setFeaturesCompany(null)
       await fetchCompanies(token)
     } catch (err) {
@@ -329,6 +337,7 @@ export default function RootPanelPage() {
         <MfeConfigModal
           mfe={featuresMfe}
           companies={featuresCompany ? [{ id: featuresCompany.id, nombre: featuresCompany.nombre }] : companies.map((c) => ({ id: c.id, nombre: c.nombre }))}
+          token={token}
           onClose={() => setFeaturesMfe(null)}
           onSaved={() => setFeaturesMfe(null)}
         />

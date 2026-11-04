@@ -304,6 +304,23 @@ export async function fetchMfeSchema(apiUrl: string): Promise<MfeConfigField[] |
   }
 }
 
+/**
+ * Consulta el estado actual de configuración de un MFE directamente desde su backend
+ * (`GET {apiUrl}/mfe/config-state?companyId=xxx`). Devuelve null si no responde.
+ */
+export async function fetchMfeConfig(apiUrl: string, companyId: string): Promise<MfeConfigValues | null> {
+  try {
+    const base = apiUrl.replace(/\/$/, '')
+    const res = await fetch(`${base}/mfe/config-state?companyId=${encodeURIComponent(companyId)}`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    return (await res.json()) as MfeConfigValues
+  } catch {
+    return null
+  }
+}
+
 /** Persiste el registro actual (overrides + MFEs del usuario) en el backend. */
 export async function saveMfesToServer(authToken: string): Promise<void> {
   const { apiRequest } = await import('./api')
@@ -311,5 +328,48 @@ export async function saveMfesToServer(authToken: string): Promise<void> {
     await apiRequest('/root/mfe-config', { method: 'PUT', token: authToken, body: { mfes: readStored() } })
   } catch {
     /* si falla, queda la caché local; se reintenta en el próximo guardado */
+  }
+}
+
+/**
+ * Sincroniza la configuración de un MFE con su propio backend (si lo soporta).
+ * Se usa para que el Root Panel tenga "peso" y persista en la BD del MFE.
+ */
+export async function syncMfeConfigToBackend(mfe: MfeEntry, companyId: string, values: MfeConfigValues, authToken?: string): Promise<void> {
+  if (!mfe.apiUrl) return
+
+  try {
+    const base = mfe.apiUrl.replace(/\/$/, '')
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`
+
+    // Si es trazabilidad, usamos su endpoint específico de features.
+    if (mfe.id === 'builtin-trazabilidad' || mfe.featureKey === 'trazabilidad') {
+      await fetch(`${base}/settings/features`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ ...values, companyId, source: 'root' }),
+      })
+    } else {
+      // Otros MFEs: intentamos un endpoint estándar /mfe/config-state.
+      await fetch(`${base}/mfe/config-state`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ companyId, values, source: 'root' }),
+      })
+    }
+
+    // Notificación instantánea (Req 5.8):
+    // 1. BroadcastChannel para otras pestañas abiertas de Trazabilidad.
+    const channel = new BroadcastChannel('ommex_tracer_refresh')
+    channel.postMessage('refresh')
+    channel.close()
+
+    // 2. postMessage a todos los iframes en esta misma ventana (por si está embebido).
+    document.querySelectorAll('iframe').forEach((iframe) => {
+      iframe.contentWindow?.postMessage({ type: 'trazabilidad:refresh' }, '*')
+    })
+  } catch (err) {
+    console.error(`[MFE] Error sincronizando config con backend de ${mfe.name}:`, err)
   }
 }
